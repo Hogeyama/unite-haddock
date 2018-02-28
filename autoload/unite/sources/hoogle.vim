@@ -63,10 +63,10 @@ let s:source.action_table['*'].preview = {
       \ }
 
 function! s:source.action_table['*'].preview.func(candidate)
-  let l:start = a:candidate.action__haddock_index + 1
-  let l:exact = s:exact_flag(a:candidate.action__haddock_exact)
+  "let l:start = a:candidate.action__haddock_index + 1
+  "let l:exact = s:exact_flag(a:candidate.action__haddock_exact)
   let l:query = shellescape(a:candidate.word)
-  let l:output = unite#util#system(printf(s:hoogle_command . ' search --verbose --info %s%s', l:exact, l:query))
+  let l:output = unite#util#system(printf(s:hoogle_command . ' search --verbose --info %s', l:query))
   silent pedit! hoogle
   wincmd P
   setlocal buftype=nofile
