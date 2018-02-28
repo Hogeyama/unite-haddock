@@ -1,10 +1,12 @@
 function! unite#sources#hoogle#define()
-  if executable('hoogle')
-    return s:source
-  else
-    return []
-  endif
+  return s:source
 endfunction
+
+if executable('stack')
+  let s:hoogle_command="stack exec -- hoogle"
+else
+  let s:hoogle_command="hoogle"
+endif
 
 let s:source = {
       \ 'name': 'hoogle',
@@ -15,7 +17,7 @@ let s:source = {
 
 function! s:source.gather_candidates(args, context)
   let l:exact = !empty(filter(copy(a:args), 'v:val ==# "exact"'))
-  let l:output = unite#util#system(printf('hoogle search --verbose --link --count %d %s%s', s:max_candidates(), s:exact_flag(l:exact), shellescape(a:context.input)))
+  let l:output = unite#util#system(printf(s:hoogle_command . ' search --verbose --link --count %d %s%s', s:max_candidates(), s:exact_flag(l:exact), shellescape(a:context.input)))
   if unite#util#get_last_status() == 0
     let l:candidates = map(split(s:remove_verbose(l:output, 0), '\n'), 's:make_candidate(a:context.input, v:key, v:val, l:exact)')
     return filter(l:candidates, '!empty(v:val.action__haddock_module)')
@@ -64,7 +66,7 @@ function! s:source.action_table['*'].preview.func(candidate)
   let l:start = a:candidate.action__haddock_index + 1
   let l:exact = s:exact_flag(a:candidate.action__haddock_exact)
   let l:query = shellescape(a:candidate.word)
-  let l:output = unite#util#system(printf('hoogle search --verbose --info --start %d %s%s', l:start, l:exact, l:query))
+  let l:output = unite#util#system(printf(s:hoogle_command . ' search --verbose --info --start %d %s%s', l:start, l:exact, l:query))
   silent pedit! hoogle
   wincmd P
   setlocal buftype=nofile
