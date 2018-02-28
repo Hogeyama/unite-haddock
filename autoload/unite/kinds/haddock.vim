@@ -2,6 +2,12 @@ function! unite#kinds#haddock#define()
   return s:kind
 endfunction
 
+if executable('stack')
+  let s:ghc = 'stack exec ghc --'
+else
+  let s:ghc = 'ghc'
+endif
+
 let s:kind = {
       \ 'name': 'haddock',
       \ 'default_action': 'browse_local',
@@ -28,7 +34,7 @@ function! s:kind.action_table.browse_local.func(candidates)
       let l:path .= get(l:candidate, 'action__haddock_fragment', '')
       call s:browse(l:candidate, 'file://' . l:path)
     else
-      if l:pkg == 0
+      if l:pkg == ''
         call unite#util#print_error("Cannot find a package for `" . l:mod . "`")
       else
         call unite#util#print_error(printf("documentation for '%s' (%s) does not exist", l:mod, l:pkg))
@@ -49,7 +55,7 @@ function! s:kind.action_table.browse_remote.func(candidates)
       continue
     endif
     let l:pkg = s:find_pkg(l:mod)
-    if l:pkg == 0
+    if l:pkg == ''
       call unite#util#print_error("Cannot find a package for `" . l:mod . "`")
     else
       let l:m = matchlist(l:pkg, '^\(.\+\)-\([.0-9]\{-}\)$')
@@ -59,7 +65,7 @@ function! s:kind.action_table.browse_remote.func(candidates)
         if l:name ==# 'ghc'
           let l:ghc_ver = l:ver
         else
-          let l:ghc_ver = unite#util#system('ghc --numeric-version')
+          let l:ghc_ver = unite#util#system(s:ghc . ' --numeric-version')
         endif
         let l:path = printf('http://www.haskell.org/ghc/docs/%s/html/libraries/%s-%s/%s.html', l:ghc_ver, l:name, l:ver, substitute(l:mod, '\.', '-', 'g'))
       else
@@ -73,7 +79,7 @@ endfunction
 
 function! s:find_pkg(mod)
   let l:output = unite#haddock#ghc_pkg('find-module --simple-output ' . a:mod)
-  return matchstr(get(split(l:output, '\n'), 0), '^\S\+')
+  return matchstr(get(split(l:output, '\n'), ''), '^\S\+')
 endfunction
 
 function! s:browse(candidate, uri)
