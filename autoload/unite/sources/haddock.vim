@@ -1,9 +1,5 @@
 function! unite#sources#haddock#define()
-  if executable('ghc-pkg')
-    return s:source
-  else
-    return []
-  endif
+  return s:source
 endfunction
 
 let s:source = { 'name': 'haddock' }
