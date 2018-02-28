@@ -28,7 +28,11 @@ function! s:kind.action_table.browse_local.func(candidates)
       let l:path .= get(l:candidate, 'action__haddock_fragment', '')
       call s:browse(l:candidate, 'file://' . l:path)
     else
-      call unite#util#print_error(printf("documentation for '%s' (%s) does not exist", l:mod, l:pkg))
+      if l:pkg == 0
+        call unite#util#print_error("Cannot find a package for `" . l:mod . "`")
+      else
+        call unite#util#print_error(printf("documentation for '%s' (%s) does not exist", l:mod, l:pkg))
+      endif
     endif
   endfor
 endfunction
@@ -45,21 +49,25 @@ function! s:kind.action_table.browse_remote.func(candidates)
       continue
     endif
     let l:pkg = s:find_pkg(l:mod)
-    let l:m = matchlist(l:pkg, '^\(.\+\)-\([.0-9]\{-}\)$')
-    let l:name = l:m[1]
-    let l:ver = l:m[2]
-    if l:name ==# 'ghc' || l:name ==# 'ghc-prim'
-      if l:name ==# 'ghc'
-        let l:ghc_ver = l:ver
-      else
-        let l:ghc_ver = unite#util#system('ghc --numeric-version')
-      endif
-      let l:path = printf('http://www.haskell.org/ghc/docs/%s/html/libraries/%s-%s/%s.html', l:ghc_ver, l:name, l:ver, substitute(l:mod, '\.', '-', 'g'))
+    if l:pkg == 0
+      call unite#util#print_error("Cannot find a package for `" . l:mod . "`")
     else
-      let l:path = printf('http://hackage.haskell.org/packages/archive/%s/%s/doc/html/%s.html', l:name, l:ver, substitute(l:mod, '\.', '-', 'g'))
+      let l:m = matchlist(l:pkg, '^\(.\+\)-\([.0-9]\{-}\)$')
+      let l:name = l:m[1]
+      let l:ver = l:m[2]
+      if l:name ==# 'ghc' || l:name ==# 'ghc-prim'
+        if l:name ==# 'ghc'
+          let l:ghc_ver = l:ver
+        else
+          let l:ghc_ver = unite#util#system('ghc --numeric-version')
+        endif
+        let l:path = printf('http://www.haskell.org/ghc/docs/%s/html/libraries/%s-%s/%s.html', l:ghc_ver, l:name, l:ver, substitute(l:mod, '\.', '-', 'g'))
+      else
+        let l:path = printf('http://hackage.haskell.org/packages/archive/%s/%s/doc/html/%s.html', l:name, l:ver, substitute(l:mod, '\.', '-', 'g'))
+      endif
+      let l:path .= get(l:candidate, 'action__haddock_fragment', '')
+      call s:browse(l:candidate, l:path)
     endif
-    let l:path .= get(l:candidate, 'action__haddock_fragment', '')
-    call s:browse(l:candidate, l:path)
   endfor
 endfunction
 
