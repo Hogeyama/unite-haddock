@@ -34,7 +34,7 @@ function! s:kind.action_table.browse_local.func(candidates)
       let l:path .= get(l:candidate, 'action__haddock_fragment', '')
       call s:browse(l:candidate, 'file://' . l:path)
     else
-      if l:pkg == ''
+      if l:pkg is 0
         call unite#util#print_error("Cannot find a package for `" . l:mod . "`")
       else
         call unite#util#print_error(printf("documentation for '%s' (%s) does not exist", l:mod, l:pkg))
@@ -55,7 +55,7 @@ function! s:kind.action_table.browse_remote.func(candidates)
       continue
     endif
     let l:pkg = s:find_pkg(l:mod)
-    if l:pkg == ''
+    if l:pkg is 0
       call unite#util#print_error("Cannot find a package for `" . l:mod . "`")
     else
       let l:m = matchlist(l:pkg, '^\(.\+\)-\([.0-9]\{-}\)$')
@@ -79,7 +79,7 @@ endfunction
 
 function! s:find_pkg(mod)
   let l:output = unite#haddock#ghc_pkg('find-module --simple-output ' . a:mod)
-  return matchstr(get(split(l:output, '\n'), ''), '^\S\+')
+  return matchstr(get(split(l:output, '\n'), 0), '^\S\+')
 endfunction
 
 function! s:browse(candidate, uri)
